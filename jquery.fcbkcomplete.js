@@ -56,6 +56,7 @@
  * filter_case      - case sensitive filter
  * filter_selected  - filter selected items from list
  * complete_text    - text for complete page
+ * complete_opts    - show option items in complete page
  * maxshownitems    - maximum numbers that will be shown at dropdown list (less better performance)
  * onselect         - fire event on item select
  * onremove         - fire event on item remove
@@ -186,6 +187,11 @@ $.FCBKCompleter = function(input, options) {
       option = $(element);
       addItem(option.text(), option.val(), true);
     });
+
+    // create complete option items
+    if (options.complete_opts) {
+      replaceCompleteWithOptionItems();
+    }
   }
 
 	
@@ -218,6 +224,10 @@ $.FCBKCompleter = function(input, options) {
       $(this).parent("li").fadeOut("fast", function(){ removeItem($(this)); });
       return false;
     });
+
+    if (options.complete_opts) {
+      hideCompleteItem(value);
+    }
 
     if (!preadded) {
       $("#"+elemid + "_annoninput").remove();
@@ -253,6 +263,10 @@ $.FCBKCompleter = function(input, options) {
     }
     $element.children("option[value=" + item.attr("rel") + "]").removeAttr("selected");
     $element.children("option[value=" + item.attr("rel") + "]").removeClass("selected");
+    if (options.complete_opts) {
+      showCompleteItem(item.attr("rel"));
+    }
+
     item.remove();
     deleting = 0;
   }
@@ -555,7 +569,38 @@ $.FCBKCompleter = function(input, options) {
       return;
     }
   }
-  
+
+  function replaceCompleteWithOptionItems() {
+    complete.children('.default').html('');
+
+    $element.children("option").each(function(i, option) {
+      option = $(option);
+
+      var item = $(document.createElement('span'));
+      item.append(option.text());
+      item.attr("rel", option.val());
+      item.mousedown(function() {
+        var o = $(this);
+        addItem(o.text(), o.attr("rel"));
+        complete.hide;
+      });
+
+      complete.children('.default').append(item);
+      complete.children('.default').append(' ');
+
+      if (option.hasClass("selected")) {
+        item.css("display", "none");
+      }
+    });
+  }
+
+  function hideCompleteItem(rel_value) {
+    complete.children(".default").children("span[rel=" + rel_value + "]").css("display", "none");
+  }
+
+  function showCompleteItem(rel_value) {
+    complete.children(".default").children("span[rel=" + rel_value + "]").fadeIn("fast");
+  }
   
   function funCall(func,item) { 
     var _object = "";     
@@ -601,6 +646,7 @@ $.FCBKCompleter.defaults = {
   holder_class: 'holder',
   results_class: 'facebook-auto',
   complete_text: "Start to type...",
+  complete_opts: false,
   accept_on_blur: false,
   cache: true,
   filter_case: false,
